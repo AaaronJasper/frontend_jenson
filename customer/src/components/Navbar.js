@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import '../App.css';
+import { useApp } from '../context/AppContext';
 
 function Navbar() {
+  const { basketCount, user } = useApp();
+
   return (
     <nav className="navbar">
       <Link to="/home" className="nav-left">
@@ -21,14 +24,14 @@ function Navbar() {
         </Link>
 
         <Link to="/basket" className="nav-item basket-nav-item">
-          <span className="basket-count">5</span>
+          {basketCount > 0 && <span className="basket-count">{basketCount}</span>}
           <span className="nav-icon">🛒</span>
           <span>basket</span>
         </Link>
 
         <Link to="/signin" className="nav-item">
           <span className="nav-icon">👤</span>
-          <span>sign in</span>
+          <span>{user ? user.email.split('@')[0] : 'sign in'}</span>
         </Link>
       </div>
     </nav>

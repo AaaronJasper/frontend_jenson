@@ -1,8 +1,26 @@
 import '../App.css';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { apiFetch } from '../api';
 
 function CustomerMenu() {
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    apiFetch('/api/menu')
+      .then(data => setMenuItems(data.filter(item => item.isAvailable !== false)))
+      .catch(() => setError('Failed to load menu. Please try again.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  function getPrice(item, size) {
+    const sp = item.sizePrices?.find(s => s.size.toLowerCase() === size);
+    return sp ? `£${parseFloat(sp.price).toFixed(2)}` : null;
+  }
+
   return (
     <main className="customer-menu-page">
       <Navbar />
@@ -13,116 +31,30 @@ function CustomerMenu() {
       </section>
 
       <section className="menu-list">
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Americano</h2>
-            <div className="drink-prices">
-              <span>Regular: £1.50</span>
-              <span>Large: £2.00</span>
+        {loading && <p>Loading menu...</p>}
+        {error && <p className="error-message">{error}</p>}
+        {menuItems.map(item => (
+          <div className="drink-card" key={item.itemId}>
+            <div className="drink-info">
+              <h2>{item.name}</h2>
+              <div className="drink-prices">
+                {getPrice(item, 'regular') && <span>Regular: {getPrice(item, 'regular')}</span>}
+                {getPrice(item, 'large') && <span>Large: {getPrice(item, 'large')}</span>}
+              </div>
+              <Link to={`/drink-order/${item.itemId}`} className="drink-add-button">Add</Link>
             </div>
-            <Link to="/drink-order/americano" className="drink-add-button">Add</Link>
-          </div>
 
-          <div className="drink-image-wrapper">
-            <img src="/images/americano.avif" alt="Americano" />
-            <div className="rating-badge"><span>⭐</span><span>4.1</span></div>
-          </div>
-        </div>
-
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Latte</h2>
-            <div className="drink-prices">
-              <span>Regular: £2.50</span>
-              <span>Large: £3.00</span>
+            <div className="drink-image-wrapper">
+              <img src={item.imgUrl} alt={item.name} />
+              {item.rating && (
+                <div className="rating-badge">
+                  <span>⭐</span>
+                  <span>{parseFloat(item.rating).toFixed(1)}</span>
+                </div>
+              )}
             </div>
-            <Link to="/drink-order/latte" className="drink-add-button">Add</Link>
           </div>
-
-          <div className="drink-image-wrapper">
-            <img src="/images/latte.jpg" alt="Latte" />
-            <div className="rating-badge"><span>⭐</span><span>4.3</span></div>
-          </div>
-        </div>
-
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Cappuccino</h2>
-            <div className="drink-prices">
-              <span>Regular: £2.50</span>
-              <span>Large: £3.00</span>
-            </div>
-            <Link to="/drink-order/cappuccino" className="drink-add-button">Add</Link>
-          </div>
-
-          <div className="drink-image-wrapper">
-            <img src="/images/cappuccino.jpg" alt="Cappuccino" />
-            <div className="rating-badge"><span>⭐</span><span>4.1</span></div>
-          </div>
-        </div>
-
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Americano with milk</h2>
-            <div className="drink-prices">
-              <span>Regular: £2.00</span>
-              <span>Large: £2.50</span>
-            </div>
-            <Link to="/drink-order/americano-milk" className="drink-add-button">Add</Link>
-          </div>
-
-          <div className="drink-image-wrapper">
-            <img src="/images/americano-milk.jpg" alt="Americano with milk" />
-            <div className="rating-badge"><span>⭐</span><span>4.0</span></div>
-          </div>
-        </div>
-
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Mocha</h2>
-            <div className="drink-prices">
-              <span>Regular: £2.50</span>
-              <span>Large: £3.00</span>
-            </div>
-            <Link to="/drink-order/mocha" className="drink-add-button">Add</Link>
-          </div>
-
-          <div className="drink-image-wrapper">
-            <img src="/images/mocha.jpg" alt="Mocha" />
-            <div className="rating-badge"><span>⭐</span><span>4.4</span></div>
-          </div>
-        </div>
-
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Hot Chocolate</h2>
-            <div className="drink-prices">
-              <span>Regular: £2.00</span>
-              <span>Large: £2.50</span>
-            </div>
-            <Link to="/drink-order/hot-chocolate" className="drink-add-button">Add</Link>
-          </div>
-
-          <div className="drink-image-wrapper">
-            <img src="/images/hot-chocolate.jpg" alt="Hot Chocolate" />
-            <div className="rating-badge"><span>⭐</span><span>4.5</span></div>
-          </div>
-        </div>
-
-        <div className="drink-card">
-          <div className="drink-info">
-            <h2>Mineral Water</h2>
-            <div className="drink-prices">
-              <span>Regular: £1.00</span>
-            </div>
-            <Link to="/drink-order/mineral-water" className="drink-add-button">Add</Link>
-          </div>
-
-          <div className="drink-image-wrapper">
-            <img src="/images/water.avif" alt="Mineral Water" />
-            <div className="rating-badge"><span>⭐</span><span>4.2</span></div>
-          </div>
-        </div>
+        ))}
       </section>
     </main>
   );

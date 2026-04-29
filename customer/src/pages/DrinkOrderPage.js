@@ -1,64 +1,53 @@
 import '../App.css';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { apiFetch } from '../api';
+import { useApp } from '../context/AppContext';
 
 function DrinkOrderPage() {
+  const { drinkId } = useParams();
+  const navigate = useNavigate();
+  const { addToBasket } = useApp();
 
-const { drinkId } = useParams();
+  const [drink, setDrink] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [quantity, setQuantity] = useState(1);
 
-  // TEMPORARY DATA 
-  const drinks = {
-    americano: {
-      name: 'Americano',
-      image: '/images/americano.avif',
-      description: 'A bold black coffee made with espresso and hot water.',
-      regularPrice: '£1.50',
-      largePrice: '£2.00',
-    },
-    latte: {
-      name: 'Latte',
-      image: '/images/latte.jpg',
-      description: 'Smooth espresso with steamed milk.',
-      regularPrice: '£2.50',
-      largePrice: '£3.00',
-    },
-    cappuccino: {
-      name: 'Cappuccino',
-      image: '/images/cappuccino.jpg',
-      description: 'Rich espresso topped with steamed milk and foam.',
-      regularPrice: '£2.50',
-      largePrice: '£3.00',
-    },
-    'americano-milk': {
-    name: 'Americano with milk',
-    image: '/images/americano-milk.jpg',
-    description: 'Americano with added milk.',
-    regularPrice: '£2.00',
-    largePrice: '£2.50',
-  },
-    'hot-chocolate': {
-      name: 'Hot Chocolate',
-      image: '/images/hot-chocolate.jpg',
-      description: 'Creamy hot chocolate.',
-      regularPrice: '£2.00',
-      largePrice: '£2.50',
-    },
-    mocha: {
-      name: 'Mocha',
-      image: '/images/mocha.jpg',
-      description: 'Espresso with chocolate and milk.',
-      regularPrice: '£2.50',
-      largePrice: '£3.00',
-    },
-    'mineral-water': {
-      name: 'Mineral Water',
-      image: '/images/water.avif',
-      description: 'Still bottled water.',
-      regularPrice: '£1.00',
-      largePrice: null,
-    },
-  };
+  useEffect(() => {
+    apiFetch(`/api/menu/${drinkId}`)
+      .then(data => {
+        setDrink(data);
+        const first = data.sizePrices?.[0]?.size || '';
+        setSelectedSize(first.toLowerCase());
+      })
+      .catch(() => setError('Could not load drink details.'))
+      .finally(() => setLoading(false));
+  }, [drinkId]);
 
-  const drink = drinks[drinkId];
+  function getUnitPrice() {
+    if (!drink) return 0;
+    const sp = drink.sizePrices?.find(s => s.size.toLowerCase() === selectedSize);
+    return sp ? parseFloat(sp.price) : 0;
+  }
+
+  function handleConfirm() {
+    addToBasket({
+      menuItemId: drink.itemId,
+      name: drink.name,
+      image: drink.imgUrl,
+      size: selectedSize,
+      quantity,
+      unitPrice: getUnitPrice(),
+    });
+    navigate('/order');
+  }
+
+  if (loading) return <main className="drink-order-page"><p>Loading...</p></main>;
+  if (error) return <main className="drink-order-page"><p className="error-message">{error}</p></main>;
+
+  const total = (getUnitPrice() * quantity).toFixed(2);
 
   return (
     <main className="drink-order-page">
@@ -66,14 +55,8 @@ const { drinkId } = useParams();
         <div className="nav-left">
           <img src="/images/logo.png" alt="logo" className="nav-logo" />
         </div>
-
         <div className="nav-actions">
-          <div className="nav-item">
-            <span className="nav-icon">👤</span>
-            <span>sign in</span>
-          </div>
-
-          <div className="nav-item">
+          <div className="nav-item" onClick={() => navigate(-1)} style={{ cursor: 'pointer' }}>
             <span className="nav-icon">←</span>
             <span>back</span>
           </div>
@@ -81,53 +64,42 @@ const { drinkId } = useParams();
       </nav>
 
       <section className="drink-order-card">
-        <img src={drink.image} alt={drink.name} className="drink-order-image" />
-
+        <img src={drink.imgUrl} alt={drink.name} className="drink-order-image" />
         <h1>{drink.name}</h1>
         <p className="drink-description">{drink.description}</p>
 
         <div className="option-section">
           <h2>Choose size</h2>
-
           <div className="option-buttons">
-            <button>Regular {drink.regularPrice}</button>
-            {drink.largePrice && (
-              <button>Large {drink.largePrice}</button>)}
+            {drink.sizePrices?.map(sp => (
+              <button
+                key={sp.size}
+                className={selectedSize === sp.size.toLowerCase() ? 'selected' : ''}
+                onClick={() => setSelectedSize(sp.size.toLowerCase())}
+              >
+                {sp.size.charAt(0).toUpperCase() + sp.size.slice(1)} £{parseFloat(sp.price).toFixed(2)}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className="option-section">
           <h2>Quantity</h2>
-
           <div className="quantity-row">
-            <button>-</button>
-            <span>1</span>
-            <button>+</button>
+            <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</button>
+            <span>{quantity}</span>
+            <button onClick={() => setQuantity(q => q + 1)}>+</button>
           </div>
-        </div>
-
-        <div className="option-section">
-          <h2>Extras</h2>
-
-          <label>
-            <input type="checkbox" /> Extra shot
-          </label>
-
-          <label>
-            <input type="checkbox" /> Oat milk
-          </label>
-
-          <label>
-            <input type="checkbox" /> No sugar
-          </label>
         </div>
 
         <div className="order-summary">
           <span>Total</span>
-          <strong>£2.50</strong>
+          <strong>£{total}</strong>
         </div>
 
-        <button className="confirm-button">Confirm</button>
+        <button className="confirm-button" onClick={handleConfirm}>
+          Add to Basket
+        </button>
       </section>
     </main>
   );
