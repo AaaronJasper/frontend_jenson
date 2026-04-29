@@ -869,10 +869,67 @@
   padding: 22px;
   border: none;
   border-radius: 10px;
-  background-color: #2f78ed;
+  background-color: #6f4e37;
   color: white;
   font-size: 30px;
   margin-top: 40px;
+  cursor: pointer;
+}
+
+.signin-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signout-button {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 10px;
+  background-color: #6f4e37;
+  color: white;
+  font-size: 18px;
+  margin-top: 32px;
+  cursor: pointer;
+}
+
+.signin-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.signin-tabs button {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #6f4e37;
+  border-radius: 10px;
+  background: transparent;
+  color: #6f4e37;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.signin-tabs button.active {
+  background: #6f4e37;
+  color: white;
+}
+
+.account-info {
+  margin-bottom: 24px;
+}
+
+.account-info h1 {
+  font-size: 28px;
+  margin: 0 0 4px;
+}
+
+.account-email {
+  color: #5a3b25;
+  font-size: 15px;
+  margin: 0;
 }
 
 @media (max-width: 500px) {

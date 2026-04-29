@@ -15,7 +15,14 @@ export function AppProvider({ children }) {
     setUser(userData);
   }
 
-  function logout() {
+  async function logout() {
+    const token = localStorage.getItem('token');
+    if (token) {
+      await fetch('http://localhost:8080/api/v1/auth/logout', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);

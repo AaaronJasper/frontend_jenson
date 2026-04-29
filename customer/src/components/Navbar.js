@@ -29,9 +29,9 @@ function Navbar() {
           <span>basket</span>
         </Link>
 
-        <Link to="/signin" className="nav-item">
+        <Link to={user ? '/account' : '/signin'} className="nav-item">
           <span className="nav-icon">👤</span>
-          <span>{user ? user.email.split('@')[0] : 'sign in'}</span>
+          <span>{user ? (user.name?.split(' ')[0] || user.email.split('@')[0]) : 'sign in'}</span>
         </Link>
       </div>
     </nav>
