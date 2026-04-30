@@ -418,14 +418,24 @@
 }
 
 .primary-button {
+  display: block;
+  text-align: center;
+  text-decoration: none;
   width: 100%;
   padding: 18px;
   border: none;
   border-radius: 18px;
-  background-color: #b9947b;
+  background-color: #6f4e37;
   color: #000;
   font-size: clamp(22px, 5vw, 32px);
   font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.primary-button:hover {
+  background-color: #5a3a22;
 }
 
 .quick-actions-section {
@@ -958,11 +968,6 @@
   color: inherit;
 }
 
-.primary-button {
-  display: block;
-  text-align: center;
-  text-decoration: none;
-}
 
 .drink-add-button {
   display: block;

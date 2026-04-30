@@ -29,17 +29,17 @@ function HomePage() {
 
         <div className="popular-grid">
           <div className="popular-card">
-            <img src="/images/latte.jpg" alt="Latte" />
+            <img src="https://iili.io/BslXxdF.jpg" alt="Latte" />
             <h3>Latte</h3>
           </div>
 
           <div className="popular-card">
-            <img src="/images/cappuccino.jpg" alt="Cappuccino" />
+            <img src="https://iili.io/BslXIea.jpg" alt="Cappuccino" />
             <h3>Cappuccino</h3>
           </div>
 
           <div className="popular-card">
-            <img src="/images/hot-chocolate.jpg" alt="Hot Chocolate" />
+            <img src="https://iili.io/BslXng1.jpg" alt="Hot Chocolate" />
             <h3>Hot Chocolate</h3>
           </div>
         </div>
