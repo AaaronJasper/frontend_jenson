@@ -273,14 +273,37 @@
 
 .payment-button {
   display: block;
-  width: calc(100% - 80px);
-  margin: 80px auto 0;
+  width: calc(100% - 72px);
+  margin: 20px 36px 40px;
   padding: 20px;
   border: none;
-  border-radius: 14px;
-  background-color: #2f78ed;
-  color: white;
-  font-size: clamp(28px, 6vw, 42px);
+  border-radius: 18px;
+  background-color: #9c6b47;
+  color: #fff3e1;
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.payment-button:hover:not(:disabled) {
+  background-color: #7b5436;
+}
+
+.payment-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  margin: 16px 36px 0;
+  padding: 14px 20px;
+  background-color: rgba(180, 50, 30, 0.25);
+  border: 1px solid rgba(220, 80, 60, 0.5);
+  border-radius: 12px;
+  color: #ffd0c8;
+  font-size: clamp(16px, 3vw, 20px);
+  font-weight: 500;
 }
 
 .basket-left {
@@ -968,6 +991,43 @@
   color: inherit;
 }
 
+
+.guest-name-input {
+  margin: 28px 36px 0;
+  padding: 24px;
+  background-color: rgba(255, 243, 225, 0.12);
+  border: 1px solid rgba(255, 243, 225, 0.35);
+  border-radius: 18px;
+}
+
+.guest-name-input label {
+  display: block;
+  color: #fff3e1;
+  font-size: clamp(18px, 4vw, 24px);
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.guest-name-input input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 243, 225, 0.5);
+  background-color: #f7f0e6;
+  font-size: clamp(18px, 4vw, 24px);
+  color: #2c1b12;
+  outline: none;
+}
+
+.guest-name-input input:focus {
+  border-color: #d8c7b3;
+  background-color: #fff3e1;
+}
+
+.guest-name-input input::placeholder {
+  color: #a08060;
+}
 
 .drink-add-button {
   display: block;

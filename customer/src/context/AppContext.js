@@ -7,7 +7,15 @@ export function AppProvider({ children }) {
     try { return JSON.parse(localStorage.getItem('user')); } catch { return null; }
   });
   const [basket, setBasket] = useState([]);
-  const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [currentOrderId, setCurrentOrderId] = useState(
+    () => localStorage.getItem('currentOrderId') || null
+  );
+
+  function setAndPersistOrderId(id) {
+    if (id) localStorage.setItem('currentOrderId', id);
+    else localStorage.removeItem('currentOrderId');
+    setCurrentOrderId(id);
+  }
 
   function login(userData, token) {
     localStorage.setItem('token', token);
@@ -54,7 +62,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       user, login, logout,
       basket, addToBasket, clearBasket, basketCount,
-      currentOrderId, setCurrentOrderId,
+      currentOrderId, setCurrentOrderId: setAndPersistOrderId,
     }}>
       {children}
     </AppContext.Provider>
