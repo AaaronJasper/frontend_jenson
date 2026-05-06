@@ -21,7 +21,7 @@ function getStepIndex(status) {
 }
 
 function OrderStatusPage() {
-  const { currentOrderId } = useApp();
+  const { currentOrderId, setCurrentOrderId } = useApp();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,7 +33,13 @@ function OrderStatusPage() {
     }
     apiFetch(`/api/orders/${currentOrderId}`)
       .then(setOrder)
-      .catch(() => setError('Could not load order details.'))
+      .catch(err => {
+        if (err.status === 404) {
+          setCurrentOrderId(null);
+        } else {
+          setError('Could not load order details.');
+        }
+      })
       .finally(() => setLoading(false));
   }, [currentOrderId]);
 
@@ -43,7 +49,11 @@ function OrderStatusPage() {
     const interval = setInterval(() => {
       apiFetch(`/api/orders/${currentOrderId}`)
         .then(setOrder)
-        .catch(() => {});
+        .catch(err => {
+          if (err.status === 404) {
+            setCurrentOrderId(null);
+          }
+        });
     }, 10000);
     return () => clearInterval(interval);
   }, [currentOrderId]);

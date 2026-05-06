@@ -1,8 +1,6 @@
 import { mockMenu } from "./data/mockMenu";
 
 const BASE_URL = 'http://localhost:8080';
-const HORSEPAY_URL =
-  'http://homepages.cs.ncl.ac.uk/daniel.nesbitt/CSC8019/HorsePay/HorsePay.php';
 
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem('token');
@@ -14,7 +12,9 @@ export async function apiFetch(path, options = {}) {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || res.statusText);
+    const err = new Error(text || res.statusText);
+    err.status = res.status;
+    throw err;
   }
 
   if (res.status === 204) return null;
@@ -37,17 +37,8 @@ export async function getMenuItem(itemId) {
 }
 
 export async function makeHorsePayPayment(paymentPayload) {
-  const res = await fetch(HORSEPAY_URL, {
+  return apiFetch('/api/payment/horsepay', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(paymentPayload),
   });
-
-  if (!res.ok) {
-    throw new Error('HorsePay payment request failed.');
-  }
-
-  return res.json();
 }
