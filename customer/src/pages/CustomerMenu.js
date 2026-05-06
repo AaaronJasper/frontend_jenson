@@ -1,20 +1,33 @@
 import '../App.css';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { apiFetch } from '../api';
+import { getMenu } from '../api';
+import { useApp } from '../context/AppContext';
 
 function CustomerMenu() {
+  const navigate = useNavigate();
+  const { arrivalTime } = useApp();
+
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    apiFetch('/api/menu')
-      .then(data => setMenuItems(data.filter(item => item.isAvailable !== false)))
-      .catch(() => setError('Failed to load menu. Please try again.'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!arrivalTime) {
+      navigate('/arrival-time');
+    }
+  }, [arrivalTime, navigate]);
+
+  useEffect(() => {
+  getMenu()
+    .then(data => {
+      console.log('MENU DATA:', data);
+      setMenuItems(data);
+    })
+    .catch(() => setError('Failed to load menu. Please try again.'))
+    .finally(() => setLoading(false));
+}, []);
 
   function getPrice(item, size) {
     const sp = item.sizePrices?.find(s => s.size.toLowerCase() === size);
@@ -30,22 +43,58 @@ function CustomerMenu() {
         <p>Choose your coffee and collection time</p>
       </section>
 
+      {arrivalTime && (
+        <section className="selected-arrival-box menu-arrival-box">
+          <p>
+            Train arrival time selected: <strong>{arrivalTime}</strong>
+          </p>
+
+          <button
+            className="secondary-button"
+            onClick={() => navigate('/arrival-time')}
+          >
+            Change arrival time
+          </button>
+        </section>
+      )}
+
       <section className="menu-list">
         {loading && <p>Loading menu...</p>}
         {error && <p className="error-message">{error}</p>}
+
         {menuItems.map(item => (
-          <div className="drink-card" key={item.itemId}>
+          <div className={`drink-card ${!item.isAvailable ? 'unavailable' : ''}`}>
             <div className="drink-info">
               <h2>{item.name}</h2>
+
               <div className="drink-prices">
-                {getPrice(item, 'regular') && <span>Regular: {getPrice(item, 'regular')}</span>}
-                {getPrice(item, 'large') && <span>Large: {getPrice(item, 'large')}</span>}
+                {getPrice(item, 'regular') && (
+                  <span>Regular: {getPrice(item, 'regular')}</span>
+                )}
+                {getPrice(item, 'large') && (
+                  <span>Large: {getPrice(item, 'large')}</span>
+                )}
               </div>
-              <Link to={`/drink-order/${item.itemId}`} className="drink-add-button">Add</Link>
+
+              {!item.isAvailable && (
+                <div className="stock-label">Out of stock</div>
+                )}
+
+              {item.isAvailable ? (
+                <Link to={`/drink-order/${item.itemId}`} className="drink-add-button">
+                  Add
+                </Link>
+              ) : (
+              <span className="drink-add-button unavailable">
+                Unavailable
+              </span>
+            )}
+            
             </div>
 
             <div className="drink-image-wrapper">
               <img src={item.imgUrl} alt={item.name} />
+
               {item.rating && (
                 <div className="rating-badge">
                   <span>⭐</span>

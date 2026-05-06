@@ -1,8 +1,30 @@
 import '../App.css';
 import Navbar from '../components/Navbar';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import { mockMenu } from '../data/mockMenu';
 
 function HomePage() {
+  const navigate = useNavigate();
+  const { arrivalTime } = useApp();
+
+  const popularDrinks = mockMenu.filter(drink =>
+    ['Latte', 'Cappuccino', 'Hot Chocolate'].includes(drink.name)
+  );
+
+  function handleStartOrder() {
+    navigate(arrivalTime ? '/order' : '/arrival-time');
+  }
+
+  function handlePopularDrinkClick(drinkId) {
+    if (!arrivalTime) {
+      navigate('/arrival-time');
+      return;
+    }
+
+    navigate(`/drink-order/${drinkId}`);
+  }
+
   return (
     <main className="home-page">
       <Navbar />
@@ -10,38 +32,62 @@ function HomePage() {
       <section className="hero-section">
         <h1>Welcome to Whistlestop Coffee Hut</h1>
         <p>Order ahead and collect fresh coffee at Cramlington Station.</p>
-        <Link to="/order" className="primary-button">
-        Start Order
-        </Link>
+
+        <button
+        className="primary-button homepage-action-button"
+        onClick={handleStartOrder}
+        >
+          Start Order
+        </button>
       </section>
+
+      {arrivalTime && (
+        <section className="selected-arrival-box home-arrival-box">
+          <p>
+            Train arrival time selected: <strong>{arrivalTime}</strong>
+          </p>
+
+          <button
+            className="secondary-button"
+            onClick={() => navigate('/arrival-time')}
+          >
+            Change arrival time
+          </button>
+        </section>
+      )}
 
       <section className="quick-order-section">
         <div>
           <h2>Quick Order</h2>
           <p>In a rush? Reorder your usual coffee in seconds.</p>
         </div>
-        
-        <button className="quick-order-button">Quick Order</button>
+
+        <button className="quick-order-button homepage-action-button">
+          Quick Order
+        </button>
       </section>
 
       <section className="popular-section">
         <h2>Popular Drinks</h2>
 
         <div className="popular-grid">
-          <div className="popular-card">
-            <img src="https://iili.io/BslXxdF.jpg" alt="Latte" />
-            <h3>Latte</h3>
-          </div>
+          {popularDrinks.map(drink => (
+            <button
+              key={drink.itemId}
+              type="button"
+              className="popular-card popular-card-button"
+              onClick={() => handlePopularDrinkClick(drink.itemId)}
+              disabled={!drink.isAvailable}
+              aria-label={`Order ${drink.name}`}
+            >
+              <img src={drink.imgUrl} alt={drink.name} />
+              <h3>{drink.name}</h3>
 
-          <div className="popular-card">
-            <img src="https://iili.io/BslXIea.jpg" alt="Cappuccino" />
-            <h3>Cappuccino</h3>
-          </div>
-
-          <div className="popular-card">
-            <img src="https://iili.io/BslXng1.jpg" alt="Hot Chocolate" />
-            <h3>Hot Chocolate</h3>
-          </div>
+              {!drink.isAvailable && (
+                <span className="out-of-stock-badge">Out of stock</span>
+              )}
+            </button>
+          ))}
         </div>
       </section>
 
@@ -57,7 +103,6 @@ function HomePage() {
           students and travellers passing through Cramlington Station.
         </p>
       </section>
-
     </main>
   );
 }

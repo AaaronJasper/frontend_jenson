@@ -3,42 +3,45 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useApp } from '../context/AppContext';
-import { apiFetch } from '../api';
 
 function BasketPage() {
-  const { basket, clearBasket, setCurrentOrderId, user } = useApp();
+  const {
+    basket,
+    user,
+    arrivalTime,
+    increaseBasketItem,
+    decreaseBasketItem,
+    removeBasketItem
+  } = useApp();
+
   const navigate = useNavigate();
   const [guestName, setGuestName] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const total = basket.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  const total = basket.reduce(
+    (sum, item) => sum + item.unitPrice * item.quantity,
+    0
+  );
 
-  async function handlePlaceOrder() {
+  function handleContinueToPayment() {
+    if (!arrivalTime) {
+      navigate('/arrival-time');
+      return;
+    }
+
     if (!user && !guestName.trim()) {
       setError('Please enter your name to place a guest order.');
       return;
     }
+
+    const checkoutData = {
+      guestName: user ? null : guestName.trim(),
+      total,
+    };
+
+    sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
     setError('');
-    setLoading(true);
-    try {
-      const order = await apiFetch('/api/orders/order', {
-        method: 'POST',
-        body: JSON.stringify({
-          guestName: user ? null : guestName.trim(),
-          menuItemIds: basket.map(i => i.menuItemId),
-          sizes: basket.map(i => i.size),
-          quantities: basket.map(i => i.quantity),
-        }),
-      });
-      setCurrentOrderId(order.id);
-      clearBasket();
-      navigate('/status');
-    } catch (err) {
-      setError('Failed to place order. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    navigate('/payment');
   }
 
   return (
@@ -50,13 +53,36 @@ function BasketPage() {
 
         {basket.length === 0 && <p>Your basket is empty.</p>}
 
-        {basket.map((item, idx) => (
-          <div className="basket-item" key={idx}>
+        {basket.map(item => (
+          <div className="basket-item" key={`${item.menuItemId}-${item.size}`}>
             {item.image && <img src={item.image} alt={item.name} />}
-            <div>
+
+            <div className="basket-item-info">
               <h2>{item.name}</h2>
-              <p>x{item.quantity} {item.size}</p>
+              <p>{item.size.charAt(0).toUpperCase() + item.size.slice(1)}</p>
+
+              <div className="basket-controls">
+                <div className="basket-quantity-control">
+                  <button onClick={() => decreaseBasketItem(item.menuItemId, item.size)}>
+                    −
+                  </button>
+
+                  <span>{item.quantity}</span>
+
+                  <button onClick={() => increaseBasketItem(item.menuItemId, item.size)}>
+                    +
+                  </button>
+                </div>
+
+                <button
+                  className="remove-item-button"
+                  onClick={() => removeBasketItem(item.menuItemId, item.size)}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
+
             <span>£{(item.unitPrice * item.quantity).toFixed(2)}</span>
           </div>
         ))}
@@ -67,6 +93,21 @@ function BasketPage() {
               <strong>Total:</strong>
               <strong>£{total.toFixed(2)}</strong>
             </div>
+
+            {arrivalTime && (
+              <section className="selected-arrival-box change-arrival-wrapper">
+                <p>
+                  Train arrival time selected: <strong>{arrivalTime}</strong>
+                </p>
+
+                <button
+                  className="secondary-button"
+                  onClick={() => navigate('/arrival-time')}
+                >
+                  Change arrival time
+                </button>
+              </section>
+            )}
 
             {!user && (
               <div className="guest-name-input">
@@ -84,10 +125,9 @@ function BasketPage() {
 
             <button
               className="payment-button"
-              onClick={handlePlaceOrder}
-              disabled={loading}
+              onClick={handleContinueToPayment}
             >
-              {loading ? 'Placing order...' : 'Place Order'}
+              Continue to Payment
             </button>
           </>
         )}

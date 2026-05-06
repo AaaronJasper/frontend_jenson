@@ -6,15 +6,27 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('user')); } catch { return null; }
   });
+
   const [basket, setBasket] = useState([]);
+
   const [currentOrderId, setCurrentOrderId] = useState(
     () => localStorage.getItem('currentOrderId') || null
+  );
+
+  const [arrivalTime, setArrivalTime] = useState(
+    () => sessionStorage.getItem('arrivalTime') || ''
   );
 
   function setAndPersistOrderId(id) {
     if (id) localStorage.setItem('currentOrderId', id);
     else localStorage.removeItem('currentOrderId');
     setCurrentOrderId(id);
+  }
+
+  function setAndPersistArrivalTime(time) {
+    if (time) sessionStorage.setItem('arrivalTime', time);
+    else sessionStorage.removeItem('arrivalTime');
+    setArrivalTime(time);
   }
 
   function login(userData, token) {
@@ -41,6 +53,7 @@ export function AppProvider({ children }) {
       const existing = prev.find(
         i => i.menuItemId === item.menuItemId && i.size === item.size
       );
+
       if (existing) {
         return prev.map(i =>
           i.menuItemId === item.menuItemId && i.size === item.size
@@ -48,8 +61,39 @@ export function AppProvider({ children }) {
             : i
         );
       }
+
       return [...prev, item];
     });
+  }
+
+  function increaseBasketItem(menuItemId, size) {
+    setBasket(prev =>
+      prev.map(item =>
+        item.menuItemId === menuItemId && item.size === size
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
+  }
+
+  function decreaseBasketItem(menuItemId, size) {
+    setBasket(prev =>
+      prev
+        .map(item =>
+          item.menuItemId === menuItemId && item.size === size
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter(item => item.quantity > 0)
+    );
+  }
+
+  function removeBasketItem(menuItemId, size) {
+    setBasket(prev =>
+      prev.filter(
+        item => !(item.menuItemId === menuItemId && item.size === size)
+      )
+    );
   }
 
   function clearBasket() {
@@ -60,9 +104,20 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      user, login, logout,
-      basket, addToBasket, clearBasket, basketCount,
-      currentOrderId, setCurrentOrderId: setAndPersistOrderId,
+      user,
+      login,
+      logout,
+      basket,
+      addToBasket,
+      increaseBasketItem,
+      decreaseBasketItem,
+      removeBasketItem,
+      clearBasket,
+      basketCount,
+      currentOrderId,
+      setCurrentOrderId: setAndPersistOrderId,
+      arrivalTime,
+      setArrivalTime: setAndPersistArrivalTime
     }}>
       {children}
     </AppContext.Provider>
