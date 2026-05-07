@@ -24,8 +24,9 @@ function DrinkOrderPage() {
         }
 
         setDrink(data);
-        const first = data.sizePrices?.[0]?.size || '';
-        setSelectedSize(first.toLowerCase());
+
+        const firstValidSize = data.sizePrices?.[0]?.size || '';
+        setSelectedSize(firstValidSize);
       })
       .catch(() => setError('Could not load drink details.'))
       .finally(() => setLoading(false));
@@ -35,37 +36,51 @@ function DrinkOrderPage() {
     return <Navigate to="/arrival-time" replace />;
   }
 
+  const hasValidSizes = drink?.sizePrices && drink.sizePrices.length > 0;
+
   function getUnitPrice() {
-    if (!drink) return 0;
+    if (!drink || !selectedSize) return 0;
 
     const selectedPrice = drink.sizePrices?.find(
-      sp => sp.size.toLowerCase() === selectedSize
+      sp => sp.size === selectedSize
     );
 
     return selectedPrice ? parseFloat(selectedPrice.price) : 0;
   }
 
   function handleConfirm() {
-  if (!drink?.isAvailable) {
-    toast.error('This drink is currently unavailable.');
-    return;
+    if (!drink?.isAvailable) {
+      toast.error('This drink is currently unavailable.');
+      return;
+    }
+
+    if (!hasValidSizes || !selectedSize.trim()) {
+      toast.error('This item cannot be ordered because no size has been configured.');
+      return;
+    }
+
+    const unitPrice = getUnitPrice();
+
+    if (!unitPrice || unitPrice <= 0) {
+      toast.error('This item cannot be ordered because its price is invalid.');
+      return;
+    }
+
+    addToBasket({
+      menuItemId: drink.itemId,
+      name: drink.name,
+      image: drink.imgUrl,
+      size: selectedSize,
+      quantity,
+      unitPrice,
+    });
+
+    toast.success(`${quantity} ${drink.name} added to basket`);
+
+    setTimeout(() => {
+      navigate('/order');
+    }, 650);
   }
-
-  addToBasket({
-    menuItemId: drink.itemId,
-    name: drink.name,
-    image: drink.imgUrl,
-    size: selectedSize,
-    quantity,
-    unitPrice: getUnitPrice(),
-  });
-
-  toast.success(`${quantity} ${drink.name} added to basket`);
-
-  setTimeout(() => {
-    navigate('/order');
-  }, 650);
-}
 
   if (loading) {
     return (
@@ -98,6 +113,7 @@ function DrinkOrderPage() {
   }
 
   const total = (getUnitPrice() * quantity).toFixed(2);
+  const canAddToBasket = drink.isAvailable && hasValidSizes && selectedSize;
 
   return (
     <main className="drink-order-page">
@@ -127,18 +143,23 @@ function DrinkOrderPage() {
         <div className="option-section">
           <h2>Choose size</h2>
 
-          <div className="option-buttons">
-            {drink.sizePrices?.map(sp => (
-              <button
-                key={sp.size}
-                className={selectedSize === sp.size.toLowerCase() ? 'selected' : ''}
-                onClick={() => setSelectedSize(sp.size.toLowerCase())}
-              >
-                {sp.size.charAt(0).toUpperCase() + sp.size.slice(1)} £
-                {parseFloat(sp.price).toFixed(2)}
-              </button>
-            ))}
-          </div>
+          {hasValidSizes ? (
+            <div className="option-buttons">
+              {drink.sizePrices.map(sp => (
+                <button
+                  key={sp.size}
+                  className={selectedSize === sp.size ? 'selected' : ''}
+                  onClick={() => setSelectedSize(sp.size)}
+                >
+                  {sp.size} £{parseFloat(sp.price).toFixed(2)}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="error-message">
+              This item has no size configured and cannot be ordered.
+            </p>
+          )}
         </div>
 
         <div className="option-section">
@@ -163,11 +184,11 @@ function DrinkOrderPage() {
         </div>
 
         <button
-        className="confirm-button"
-        onClick={handleConfirm}
-        disabled={!drink.isAvailable}
+          className="confirm-button"
+          onClick={handleConfirm}
+          disabled={!canAddToBasket}
         >
-          {drink.isAvailable ? 'Add to Basket' : 'Out of Stock'}
+          {canAddToBasket ? 'Add to Basket' : 'Unavailable'}
         </button>
       </section>
     </main>

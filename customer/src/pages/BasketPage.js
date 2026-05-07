@@ -59,7 +59,11 @@ function BasketPage() {
 
             <div className="basket-item-info">
               <h2>{item.name}</h2>
-              <p>{item.size.charAt(0).toUpperCase() + item.size.slice(1)}</p>
+              <p>
+                {item.size
+                ? item.size.charAt(0).toUpperCase() + item.size.slice(1)
+                : 'No size selected'}
+              </p>
 
               <div className="basket-controls">
                 <div className="basket-quantity-control">

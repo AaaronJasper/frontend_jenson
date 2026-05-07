@@ -3,7 +3,7 @@ export const mockMenu = [
     itemId: 1,
     name: "Americano",
     description: "Espresso with hot water",
-    imgUrl: "/images/americano.avif",
+    imgUrl: "/images/americano.jpg",
     rating: 4.3,
     isAvailable: true,
     sizePrices: [
@@ -75,7 +75,7 @@ export const mockMenu = [
     itemId: 7,
     name: "Mineral Water",
     description: "Still bottled water",
-    imgUrl: "/images/water.avif",
+    imgUrl: "/images/water.jpg",
     rating: 4.0,
     isAvailable: true,
     sizePrices: [

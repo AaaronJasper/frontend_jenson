@@ -66,8 +66,49 @@ function PaymentPage() {
     return `GUEST${safeName}${Date.now().toString().slice(-5)}`;
   }
 
+  function validateBasketBeforePayment() {
+    const invalidItem = basket.find(
+      item => !item.size || item.size.trim() === ''
+    );
+
+    if (invalidItem) {
+      return `${invalidItem.name} is missing a valid size. Please remove it and add it again.`;
+    }
+
+    const invalidQuantity = basket.find(
+      item => !item.quantity || item.quantity <= 0
+    );
+
+    if (invalidQuantity) {
+      return `${invalidQuantity.name} has an invalid quantity.`;
+    }
+
+    const invalidPrice = basket.find(
+      item => item.unitPrice === undefined || item.unitPrice === null || item.unitPrice <= 0
+    );
+
+    if (invalidPrice) {
+      return `${invalidPrice.name} has an invalid price.`;
+    }
+
+    if (!arrivalTime || arrivalTime.trim() === '') {
+      return 'Please select a valid collection arrival time.';
+    }
+
+    return null;
+  }
+
   async function handlePayment() {
     setError('');
+
+    const validationError = validateBasketBeforePayment();
+
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -94,14 +135,17 @@ function PaymentPage() {
         );
       }
 
+      const orderPayload = {
+        guestName: user ? null : checkoutData.guestName,
+        menuItemIds: basket.map(i => i.menuItemId),
+        sizes: basket.map(i => i.size),
+        quantities: basket.map(i => i.quantity),
+        pickupTime: arrivalTime,
+      };
+
       const order = await apiFetch('/api/orders/order', {
         method: 'POST',
-        body: JSON.stringify({
-          guestName: user ? null : checkoutData.guestName,
-          menuItemIds: basket.map(i => i.menuItemId),
-          sizes: basket.map(i => i.size),
-          quantities: basket.map(i => i.quantity),
-        }),
+        body: JSON.stringify(orderPayload),
       });
 
       setCurrentOrderId(order.id);
@@ -137,7 +181,11 @@ function PaymentPage() {
             <div className="payment-summary-row" key={`${item.menuItemId}-${item.size}`}>
               <span>
                 {item.quantity} × {item.name}
-                <small>{item.size.charAt(0).toUpperCase() + item.size.slice(1)}</small>
+                <small>
+                  {item.size
+                    ? item.size.charAt(0).toUpperCase() + item.size.slice(1)
+                    : 'No size selected'}
+                </small>
               </span>
 
               <strong>£{(item.unitPrice * item.quantity).toFixed(2)}</strong>
